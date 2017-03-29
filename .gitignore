@@ -1,6 +1,4 @@
-*~
-*.swp
-_site/
-.DS_Store
-*.lock
+_site
+node_modules
+Gemfile.lock
 sftp-config.json

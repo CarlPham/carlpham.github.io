@@ -1,71 +1,50 @@
---- 
-layout: default 
 ---
-<div class="post">
-    <!-- This is the posts header text -->
-    <h2>
-        <a href="{{page.url}}" rel="bookmark" title="{{page.title}}">{{page.title}}</a></h2>
-    <!-- This is the date and author -->
-    <small>{{page.date | date: "%B %d, %Y"}} by Carl Pham</small>
-    <div class="entry">
-        {{content}}
-    </div>
-    <p class="postmetadata">
-        <a href="{{page.url}}#comments"
-            title="Comment on {{page.title}}"><span
-                class="dsq-postid" rel="{{page.postid}} http://carlpham.com{{page.id}}/">View
-                Comments</span> </a>
-    </p>
+layout: default
+---
 
-    <!-- Disqus Comment System -->
-    <a name="comments" />
-    <div id="disqus_thread">
-        <div id="dsq-content">
+<!-- Post Header -->
+<header class="intro-header" style="background-image: url('{{ site.baseurl }}/{% if page.header-img %}{{ page.header-img }}{% else %}{{ site.header-img }}{% endif %}')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <h1>{{ page.title }}</h1>
+                    {% if page.subtitle %}
+                    <h2 class="subheading">{{ page.subtitle }}</h2>
+                    {% endif %}
+                    <span class="meta">Posted by {% if page.author %}{{ page.author }}{% else %}{{ site.title }}{% endif %} on {{ page.date | date: "%B %-d, %Y" }}</span>
+                </div>
+            </div>
         </div>
     </div>
-    <ul id="dsq-comments">
-    </ul>
-    <script type="text/javascript">
-        var disqus_url = 'http://carlpham.com{{page.id}}/ ';
-        var disqus_identifier = '{{page.postid}} http://carlpham.com{{page.id}}/';
-        var disqus_container_id = 'disqus_thread';
-        var disqus_domain = 'disqus.com';
-        var disqus_shortname = 'tigraine';
-        var disqus_title = "{{page.title}}";
-        var disqus_config = function () {
-            var config = this; // Access to the config object
+</header>
 
-            /* 
-            All currently supported events:
-            * preData — fires just before we request for initial data
-            * preInit - fires after we get initial data but before we load any dependencies
-            * onInit  - fires when all dependencies are resolved but before dtpl template is rendered
-            * afterRender - fires when template is rendered but before we show it
-            * onReady - everything is done
-            */
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
 
-            config.callbacks.preData.push(function () {
-                // clear out the container (its filled for SEO/legacy purposes)
-                document.getElementById(disqus_container_id).innerHTML = '';
-            });
-            config.callbacks.onReady.push(function () {
-                // sync comments in the background so we don't block the page
-                DISQUS.request.get('?cf_action=sync_comments');
-            });
-        };
-    </script>
-    <script type="text/javascript">
-        var DsqLocal = {
-            'trackbacks': [],
-        };
-    </script>
-    <script type="text/javascript">
-        (function () {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript';
-            dsq.async = true;
-            dsq.src = 'http://' + disqus_shortname + '.' + disqus_domain + '/embed.js?pname=wordpress&pver=2.50';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <!-- End of Disqus Comment System -->
-</div>
+				{{ content }}
+
+                <hr>
+
+                <ul class="pager">
+                    {% if page.previous.url %}
+                    <li class="previous">
+                        <a href="{{ page.previous.url | prepend: site.baseurl | replace: '//', '/' }}" data-toggle="tooltip" data-placement="top" title="{{page.previous.title}}">&larr; Previous Post</a>
+                    </li>
+                    {% endif %}
+                    {% if page.next.url %}
+                    <li class="next">
+                        <a href="{{ page.next.url | prepend: site.baseurl | replace: '//', '/' }}" data-toggle="tooltip" data-placement="top" title="{{page.next.title}}">Next Post &rarr;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+            </div>
+        </div>
+    </div>
+</article>
+
+<hr>
