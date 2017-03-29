@@ -8,3 +8,4 @@ exclude:
 - readme.textile
 permalink: /:year/:month/:day/:title
 pygments: false
+encoding: UTF-8
