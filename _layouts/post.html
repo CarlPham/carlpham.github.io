@@ -37,7 +37,7 @@ layout: default
 
             /* 
             All currently supported events:
-            * preData — fires just before we request for initial data
+            * preData â€” fires just before we request for initial data
             * preInit - fires after we get initial data but before we load any dependencies
             * onInit  - fires when all dependencies are resolved but before dtpl template is rendered
             * afterRender - fires when template is rendered but before we show it
@@ -50,7 +50,7 @@ layout: default
             });
             config.callbacks.onReady.push(function () {
                 // sync comments in the background so we don't block the page
-                DISQUS.request.get('?cf_action=sync_comments&post_id=956');
+                DISQUS.request.get('?cf_action=sync_comments');
             });
         };
     </script>

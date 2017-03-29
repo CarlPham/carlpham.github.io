@@ -2,3 +2,5 @@
 *.swp
 _site/
 .DS_Store
+*.lock
+sftp-config.json
