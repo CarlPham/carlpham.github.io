@@ -1,19 +1,19 @@
 # Site settings
-title: Clean Blog
+title: CarlPham Blog's
 header-img: img/home-bg.jpg
-email: your-email@yourdomain.com
-copyright_name: CarlPham/Project/Corporate Name
-description: "Write your site description here. It will be used as your sites meta description as well!"
+email: capham.vn@gmail.com
+copyright_name: CarlPham Name
+description: "CarlPham blog's talks about programming and life"
 baseurl: ""
 url: "http://carlpham.com"
-twitter_username: SBootstrap
-github_username:  davidtmiller
-facebook_username:  StartBootstrap
-email_username:  your-email@yourdomain.com
+twitter_username: 
+github_username:  CarlPham
+facebook_username:  pham.vanca.7
+email_username:  capham.vn@gmail.com
 
 # Google Analytics
 # To enable google analytics, uncomment below line with a valid Google Tracking ID
-# google_tracking_id:
+google_tracking_id: 57650785
 
 # Build settings
 markdown: kramdown
