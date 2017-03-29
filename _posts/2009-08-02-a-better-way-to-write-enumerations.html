@@ -1,0 +1,122 @@
+---
+layout: post
+title: "A better way to write enumerations"
+guid: http://www.tigraine.at/2009/08/02/a-better-way-to-write-enumerations/
+postid: 686
+categories:
+- net
+- programmierung
+---
+<p>One thing I constantly struggle with is enumerations. They are inherently dumb, carry little more than one integer of actual information and usually mean a lot more than their name conveys.</p>  <p>Let aside Enumerations as method option flags (where they actually do make sense!), the usual line of business application will have these three enumerations somewhere:</p>  <p><img style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" title="image" border="0" alt="image" src="http://www.tigraine.at/wp-content/uploads/2009/08/image1.png" width="525" height="201" /> </p>  <p>Now, let’s ignore all the others our most basic example would be the Sex enumeration that has usually one but only one use: How to salute your user when communicating. </p>  <p>Like the obvious emails you get:</p>  <blockquote>   <p><font style="background-color: #ffffff">Hello Mr. Hölbling, we’d like to thank you for your …</font></p> </blockquote>  <p>You get the drift. If I’d perform a sex change someday the system should address me as Mrs. Hölbling (and actually, that type of thing is much more of a problem in German than in English, but anyway).    <br />And the code to do that would look something like this:</p>  
+{% highlight csharp %}
+string salutation = "Mr.";
+if (sex == Sex.Female) salutation = "Mrs.";
+
+Console.WriteLine("Dear {0} Hölbling", salutation);
+
+{% endhighlight %}
+
+<p></p>
+
+<p>In a typical web application you’ll be repeating this piece of code numerous times, since being polite doesn’t hurt. Where this would actually hurt is if you’d mindlessly copy&amp;paste that piece of code wherever you have to greet your user. You’d be violating DRY and the guy maintaining your code in 2 or 3 years will find out where you live and kill you in your sleep some day.</p>
+
+<p>What I’d like to see as a solution to this is to simply have a method living on that enumeration. Like:</p>
+
+
+{% highlight csharp %}
+Console.WriteLine("Dear {0} Hölbling", sex.GetSalutation());
+
+{% endhighlight %}
+
+<p>And that’s possible, just not very convenient. You’ll have to emulate the enumeration through a class:</p>
+
+
+{% highlight csharp %}
+public class Sex
+{
+    public int Id { get; private set; }
+    public string Salutation { get; private set; }
+}
+
+{% endhighlight %}
+
+<p>Should work like a charm, but you loose the benefit of typing Sex.Female when setting a gender. So here is how to make a class look &amp; feel like a enum without the limitations:</p>
+
+
+{% highlight csharp %}
+public class Sex
+{
+    public static Sex Male = new Sex{Id = 0, Salutation = "Mr."};
+    public static Sex Female = new Sex{Id = 1, Salutation = "Mrs."};
+
+    public int Id { get; private set; }
+    public string Salutation { get; private set; }
+}
+
+{% endhighlight %}
+
+<p>You can now do stuff like: </p>
+
+
+{% highlight csharp %}
+new User()
+    {
+        Name = "Daniel",
+        Sex = Sex.Male
+    };
+
+{% endhighlight %}
+
+<p>And if you have added equality on the id (<u>as you always should</u>) you could make decisions like with real enumerations:</p>
+
+
+{% highlight csharp %}
+if (user.Sex == Sex.Female)
+{
+    //Do Something
+}
+
+{% endhighlight %}
+
+<p>Now you could even go ahead and subclass your Sex class and dump logic in there if you please. Hell, even persist that type to a database <a href="http://fabiomaulo.blogspot.com/2009/08/from-db-to-ram-wellknowinstancetype.html">using NH and the WellKnownInstanceType as Fabio points out</a>.</p>
+
+<p>The full implementation of our above Sex enumeration is beyond the jump.</p>
+<!--more-->
+
+<p>
+  
+{% highlight csharp %}
+public class Sex
+{
+    public static Sex Male = new Sex {Id = 0, Salutation = "Mr."};
+    public static Sex Female = new Sex {Id = 1, Salutation = "Mrs."};
+
+    public int Id { get; private set; }
+    public string Salutation { get; private set; }
+
+    #region Equality methods
+
+    public bool Equals(Sex other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return other.Id == Id;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != typeof (Sex)) return false;
+        return Equals((Sex) obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id;
+    }
+
+    #endregion
+}
+
+{% endhighlight %}</p>

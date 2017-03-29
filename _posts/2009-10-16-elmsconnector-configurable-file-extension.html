@@ -1,0 +1,34 @@
+---
+layout: post
+title: "ElmsConnector configurable file extension"
+guid: http://www.tigraine.at/2009/10/16/elmsconnector-configurable-file-extension/
+postid: 777
+categories:
+- net
+- programmierung
+- projects
+- elmsconnector
+---
+<p>Seriously, nothing makes you more aware of problems with your stuff than <a href="http://en.wikipedia.org/wiki/Dogfooding">dogfooding</a>! I’ve been busy all day trying to get the new <a href="http://www.imagineclub.at/">imagineClub website</a> out of the door (yes we finally launched!) and just when I thought I had everything nailed one thing about ElmsConnector made me panic:</p>  <p>IIS6 is not passing *.elms requests on to the ASP.NET pipeline, so ElmsConnector was <u>never</u> called.</p>  <p>To fix this you need to have access to the server configuration and change that through IIS Manager. Since we (and I guess many other people) are on a shared host we could not do that, and so I had to change all paths to *.axd on short notice. </p>  <p>But, I felt like *.axd may also not work for everyone, so I decided to just make that an optional setting through the <tt>elms.xml:</tt></p>  
+{% highlight xml %}
+<component id="FileExtensionProvider">
+  <parameters>
+    <extension>ashx</extension>
+  </parameters>
+</component>
+
+{% endhighlight %}
+
+<p>This little XML will change all paths inside ElmsConnector to .ashx instead of the default .axd. (Omitting that XML will result in all your paths being .axd)</p>
+
+<p>Also note that I had to introduce one additional placeholder into the <tt>Login.htm</tt>. 
+
+  <br />Make sure that you include the $EXTENSION$ placeholder into your form action:</p>
+
+
+{% highlight xml %}
+<form method="post" action="VerifyUser.$EXTENSION$">
+
+{% endhighlight %}
+
+<p>This feature is available through release <a href="http://github.com/Tigraine/elms-connector/downloads">v0.1.0.3 from GitHub</a>.</p>

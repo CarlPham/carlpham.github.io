@@ -1,0 +1,66 @@
+---
+layout: post
+title: "C# Object Initializers are Expressions!"
+guid: http://www.tigraine.at/?p=878
+postid: 878
+categories:
+- net
+- programmierung
+---
+<p>Object initializers got introduced into C# as part of .NET 3.5 and allow you to define properties through a nice concise syntax that makes code easier to read. Here’s an example:</p>  
+{% highlight csharp %}
+var daniel = new User()
+                    {
+                        Username = "Tigraine",
+                        Age = 25,
+                        Email = "tigraine@tigraine.at"
+                    };
+
+{% endhighlight %}
+
+<p>In a .NET 2.0 environment the above code would have looked like this:</p>
+
+
+{% highlight csharp %}
+var daniel = new User();
+daniel.Username = "Tigraine";
+daniel.Age = 25;
+daniel.Email = "tigraine@tigraine.at";
+
+{% endhighlight %}
+
+<p>The funny thing here is that the .NET 2 code is not thread safe. If daniel is a public field or static field anywhere, the scheduler could interrupt the Thread right after setting the age, leaving you with an empty email field. This is also the reason why I’d call object initializers expressions: Expressions do by definition yield a value. And if we look at the code the compiler generates for an object initializer you will see this:</p>
+
+
+{% highlight csharp %}
+User <>g__initLocal0 = new User();
+<>g__initLocal0.Username = "Tigraine";
+<>g__initLocal0.Age = 0x19;
+<>g__initLocal0.Email = "tigraine@tigraine.at";
+User daniel = <>g__initLocal0;
+
+{% endhighlight %}
+
+<br />
+
+<p>The compiler does emit code that constructs the new object in a local variable that gets discarded right afterwards, and only the completed object, with all properties initialized will then be assigned to the variable. This makes this code thread safe. But, you’ll say it doesn’t yield a result thus it’s not really an expression. </p>
+
+<p>Well, rewrite it a bit and you get a expression:</p>
+
+
+{% highlight csharp %}
+Func<User> expr = () =>
+                    {
+                        var user = new User();
+                        user.Username = "Tigraine";
+                        user.Age = 25;
+                        user.Email = "tigraine@tigraine.at";
+                        return user;
+                    };
+var daniel = expr();
+
+{% endhighlight %}
+
+<br />
+
+<p>It’s essentially a function that the compiler generates inline to save the cost of a method call, but it’s semantically a function, thus it yields a value and is a expression.</p>

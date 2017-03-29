@@ -1,0 +1,28 @@
+---
+layout: post
+title: "WPF Sample, badly done"
+guid: http://www.tigraine.at/2009/06/12/wpf-sample-badly-done/
+postid: 570
+categories:
+- net
+- programmierung
+---
+<p>While trying out some WPF, I ended up downloading <a href="http://msdn.microsoft.com/en-us/library/bb295243.aspx">this code sample on Drag&amp;Drop</a> that contained the following piece  of code:</p>  
+{% highlight csharp %}
+if (e.Source == MyCanvas)
+{
+}
+else
+{
+    _isDown = true;
+    _startPoint = e.GetPosition(MyCanvas);
+    _originalElement = e.Source as UIElement;
+    MyCanvas.CaptureMouse();
+    e.Handled = true;
+}
+
+{% endhighlight %}
+
+<p>Come on? I’ve seen 6 year olds that knew the use of != and ==.</p>
+
+<p>Please Microsoft: <u>Documentation is as important as shipping code</u>. At least review what crap is getting put out there. It just looks bad to say the least. </p>

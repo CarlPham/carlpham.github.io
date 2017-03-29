@@ -1,0 +1,69 @@
+---
+layout: post
+title: "Extensibility can equal configurability"
+guid: http://www.tigraine.at/2009/02/02/extensibility-can-equal-configurability/
+postid: 464
+categories:
+- castle
+- programmierung
+---
+<p>The following code is extensible and configurable:</p>  
+{% highlight csharp %}
+public class Worker
+{
+    private IValueCalculator valueCalculator = new DefaultValueCalculator();
+
+    public IValueCalculator ValueCalculator
+    {
+        get { return valueCalculator; }
+        set { valueCalculator = value; }
+    }
+
+    public decimal Work(int number)
+    {
+        return valueCalculator.Calculate(number);
+    }
+}
+
+{% endhighlight %}
+
+<p>What happens here is that I am using the strategy pattern to implement different behaviors to keep my Worker class safe from changes to the calculator code. 
+  <br />Basically I’m doing dependency injection here, but I don’t inject the class through the constructor but through setter injection. </p>
+
+<p>Since I am not bound to the construction phase of the object, I can easily swap IValueCalculator implementations during the worker’s lifetime without having to reconstruct the whole object. </p>
+
+<p>Now, why is this extensible AND configurable?</p>
+
+<p>It’s extensible because it’s easy to implement the IValueCalculator interface and supply it to a worker instance, without changing any of the plumbing around it. 
+  <br />If I want to change the behavior for just one call i can do that very easily:
+
+  
+{% highlight csharp %}
+var worker = new Worker();
+var oldCalculator = worker.ValueCalculator;
+worker.ValueCalculator = new AlternativeCalculator();
+worker.Work(1701);
+worker.ValueCalculator = oldCalculator;
+
+{% endhighlight %}
+</p>
+
+<p>But the real beauty of the whole thing is that an inversion of control container like <a href="http://www.castleproject.org/container/index.html">Castle Windsor</a> can also inject setters, so in absence of a configuration file, the default implementation from the code will be used.
+
+  <br />But once a Windsor configuration is found you can swap the strategy classes through the configuration even without recompiling like this:</p>
+
+
+{% highlight xml %}
+<components>
+    <component 
+        id="Worker"
+        type="Blog_Sample.Worker, Blog_Sample" />
+    <component
+        id="Alternative.Calculator"
+        service="Blog_Sample.IValueCalculator, Blog_Sample"
+        type="Blog_Sample.AlternativeCalculator, Blog_Sample" />
+</components>
+
+{% endhighlight %}
+
+<p>If you want the default behavior just delete the Alternative.Calculator component and no setter injection will happen. If a service implementing IValueCalculator is present that one will be injected to the Worker.</p>

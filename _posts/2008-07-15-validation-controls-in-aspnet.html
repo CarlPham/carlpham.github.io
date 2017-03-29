@@ -1,0 +1,49 @@
+---
+layout: post
+title: "Validation Controls in ASP.NET"
+guid: http://www.tigraine.at/2008/07/15/validation-controls-in-aspnet/
+postid: 341
+categories:
+- net
+- programmierung
+---
+<p>So, yesterday I noticed something funny while doing some data-driven ASP.NET programming.</p>  <p>There are those really great Validation controls that really reduce the amount of code you need to write on average input forms.</p>  <p>So, imagine you have quite usual code like this:</p>  
+{% highlight html %}
+<asp:TextBox runat="server" ID="MyTextbox"></asp:TextBox><br />
+<asp:RequiredFieldValidator ControlToValidate="MyTextbox" runat="server"><br />
+    Textbox shouldn't be empty
+</asp:RequiredFieldValidator>
+
+<asp:Button runat="server" Text="Submit" OnClick="Submit_Click" />
+{% endhighlight %}
+
+<p>This will result in a simple form with a textbox and a submit button. The handler code for the button looks like this:</p>
+
+{% highlight csharp %}
+public void Submit_Click(object sender, EventArgs e)
+{
+    this.Title = "Hello World";
+}
+{% endhighlight %}
+
+<p>Now, if you click on the button while leaving the textbox blank, you'll see the red message that the field needs to be filled.</p>
+
+<p>If you disable Javascript in your browser, the handler code will get executed without getting validated!</p>
+
+<p>Actually, the validation is done solely on the client if you don't manually check for the Page.isValid property on the Webform.</p>
+
+<p>So, here is the revised handler code:</p>
+
+{% highlight csharp %}
+public void Submit_Click(object sender, EventArgs e)
+{
+    if (this.IsValid)
+    {
+        this.Title = "Hello World";
+    }
+}
+{% endhighlight %}
+
+<p>This isn't something unknown, MSDN points it out on some occasions. But yet, something you might overlook too easily.</p>
+
+<p>Keep this in mind when working with validator controls, hope this helps!</p>

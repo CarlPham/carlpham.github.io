@@ -1,0 +1,66 @@
+---
+layout: post
+title: "ASP.NET MVC: Hide the HttpContext services with Windsor and a custom ControllerFactory"
+guid: http://www.tigraine.at/2009/01/21/aspnet-mvc-hide-the-httpcontext-services-with-windsor-and-a-custom-controllerfactory/
+postid: 446
+categories:
+- net
+- testing
+---
+<p>ASP.NET MVC was designed to be a very “clean” and testable framework for creating web applications from Microsoft. And they failed really badly in one place: HttpContext!</p>  <p>The fact that the ASP.NET MVC Contrib project has a whole project dedicated to mocking out the whole HttpContext for testing simply illustrates one point: It’s broken, period.   <br />There is this one gigantic god hash table that has 5 other hash tables hanging from it that knows everything about the incoming request. And although it’s possible to fake the whole thing with RhinoMocks (as the MVC Contrib guys do it), it’s still a pretty stupid idea to have all those concerns in one class called “context” (and accessible to the controller code).     <br />So, although the HttpContextBase is already an abstraction of the real context, I wanted to extract those things into specialized service classes that I have full control over (and that could then be used for even more specialized classes that handle data retrieval, thus making “magic strings” go away when dealing with requests and sessions).</p>  <p>I set out to create a request service class that follows a very simple Interface:</p>  
+{% highlight csharp %}
+public interface IRequestService
+{
+    string GetRequestField(string fieldName);
+}
+
+{% endhighlight %}
+
+<p>The actual class is just a Facade for the HttpRequestBase class that gets injected into the constructor.</p>
+
+<p>Problem here: I would have to new up this IRequestService in my controller, and that’s something I didn’t want to do. Object graph construction shouldn’t be in the controller at all, and so I want to inject IRequestService instances into the controller. And that can’t be done without control over the ControllerFactory.</p>
+
+<p>The IControllerFactory interface is rather simple, and it’s the perfect place to leverage the power of a IoC framework to construct the controller objects. 
+  <br />So I simply pass the object creation off to Windsor in the CreateController method:</p>
+
+
+{% highlight csharp %}
+public class ControllerFactory : IControllerFactory
+{
+    private WindsorContainer container = new WindsorContainer(
+                                        new XmlInterpreter(new ConfigResource("castle")));
+
+    public IController CreateController(RequestContext requestContext, string controllerName)
+    {
+        
+        return (IController)container.Resolve(controllerName);
+    }
+
+    public void ReleaseController(IController controller)
+    {
+        var disposeable = controller as IDisposable;
+        if (disposeable != null)
+            disposeable.Dispose();
+        container.Release(controller);
+    }
+}
+
+
+{% endhighlight %}
+
+<p>What then took ages for me to figure out was how to instruct Windsor to use current HttpContext.Request object. Turns out, I was searching in the wrong place: That functionality is in MicroKernel and not in the Windsor container.</p>
+
+
+{% highlight csharp %}
+public IController CreateController(RequestContext requestContext, string controllerName)
+{
+    container.Kernel.AddComponentInstance<HttpRequestBase>(typeof (HttpRequestBase),
+                                                           requestContext.HttpContext.Request);
+    return (IController) container.Resolve(controllerName);
+}
+
+{% endhighlight %}
+
+<p>The AddComponentInstance method allows you to pass in a concrete instance that should be used when searching for a service. This way when Windsor constructs the RequestServiceFacade class that takes a HttpRequestBase as dependency it will simply inject the one specified instead of trying to construct the HttpRequestBase itself (that doesn’t work ;)).</p>
+
+<p>This now allows me to easily swap out request implementations by just changing the Windsor configuration.</p>

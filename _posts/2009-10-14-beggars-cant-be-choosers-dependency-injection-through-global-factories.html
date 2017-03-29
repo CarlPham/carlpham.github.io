@@ -1,0 +1,84 @@
+---
+layout: post
+title: "Beggars can&rsquo;t be choosers: Dependency injection through global factories"
+guid: http://www.tigraine.at/2009/10/14/beggars-cant-be-choosers-dependency-injection-through-global-factories/
+postid: 776
+categories:
+- net
+- programmierung
+- testing
+---
+<p>Whenever you listen to testability talks you usually take away one universal truth:</p>  <blockquote>   <p><strong>Global state is bad, singletons are essentially global state. </strong></p> </blockquote>  <p>So, if you want to have it done right, use dependency injection and don’t let your code depend on global state.</p>  <p>But: Sometimes it’s just not possible. My current project for example does not use dependency injection. Why? I didn’t know better and used ActiveRecord with all it’s static design. And besides, I’m just lazy and have no intention of diving into the Castle documentation to find out how to teach ActiveRecord to use an IoC container when creating entity objects. </p>  <p>And if you have no control over your constructor, your options for dependency injection are limited to two things:</p>  <p>Public fields (aka optional dependencies) and Global factories.</p>  <p><strong>Public fields</strong></p>  <p>While in theory a pretty decent method that allows you to swap out parts it falls very short once you have multiple classes that need the same service:</p>  
+{% highlight csharp %}
+public class Entity
+{
+    public IDateProvider DateProvider { get; set; }
+
+    public Entity()
+    {
+        DateProvider = new DateProviderImpl();
+    }
+}
+
+{% endhighlight %}
+
+<p>Since the default implementation is hardcoded into every consumer, you end up with a big pile of DRY violations that will one day bite you when you try to refactor DateProviderImpl’s constructor. </p>
+
+<p><strong>Global factories</strong></p>
+
+<p>Now the words global and testability don’t go well together, but in this case it’s ok. You try to battle the DRY violation while still making your service optionally interchangeable when testing.</p>
+
+
+{% highlight csharp %}
+public class Entity
+{
+    public Entity()
+    {
+        var now = DateProviderFactory.Provider.Now;
+    }
+}
+
+public class DateProviderFactory
+{
+    private static IDateProvider _provider;
+
+    public static void SetProvider(IDateProvider provider)
+    {
+        _provider = provider;
+    }
+    public static IDateProvider Provider
+    {
+        get
+        {
+            if (_provider == null)
+                _provider = new DateProviderImpl();
+            return Provider;
+        }
+    }
+}
+
+{% endhighlight %}
+
+<p>Now obviously you should NEVER call SetProvider inside your production code. It’s a pure testability helper so if you start messing with it expect to see some really hard to debug errors pop up.</p>
+
+<p>But as long as you don’t mess that up, you can write tests like this one:</p>
+
+
+{% highlight csharp %}
+public class TestFixture
+{
+    [Fact]
+    public void DoesSomethingWhenGivenDate()
+    {
+        var mock = new MockedDateProvider();
+        DateProviderFactory.SetProvider(mock);
+        var entity = new Entity();
+        //.....
+    }
+}
+
+{% endhighlight %}
+
+<p>I know it’s not perfect, but nobody expected it to be that way. The best solution to the problem obviously is a very clean separation of object construction and business logic, and the proven way to achieve that is dependency injection through a container like Windsor or StructureMap. Yet, often you have to look at old codebases where you just need to get the job done, and then it’s nice to know your way around the limitations sometimes.</p>
+
+<p>Oh, and btw: The example I did above was chosen deliberately to be something as simple as a abstraction of DateTime.Now. As said before, <a href="http://www.tigraine.at/2009/03/25/tests-should-last-forever/">never depend on moving parts in your tests</a>.</p>

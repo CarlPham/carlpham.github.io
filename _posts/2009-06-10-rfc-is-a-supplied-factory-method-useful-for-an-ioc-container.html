@@ -1,0 +1,53 @@
+---
+layout: post
+title: "RFC: Is a supplied factory method useful for an IoC container?"
+guid: http://www.tigraine.at/2009/06/10/rfc-is-a-supplied-factory-method-useful-for-an-ioc-container/
+postid: 569
+categories:
+- net
+- programmierung
+- pandora
+- projects
+---
+<p>I need your help.    <br />Does it make sense to have something like this in a DI container?</p>  
+{% highlight csharp %}
+[Fact]
+public void CanSupplyFactoryMethod()
+{
+    store.Register(
+        p => p.Service<IService>()
+                 .Factory(s => 
+                     {
+                         Console.WriteLine("Creating type..");
+                         if (SOME_STATIC_VAR == true)
+                         {
+                             return new ClassWithNoDependencies();
+                         }
+                         return new OtherClass();
+                     })
+        );
+    var service = container.Resolve<IService>();
+    Assert.IsType<ClassWithNoDependencies>(service);
+}
+
+{% endhighlight %}
+
+<p>The idea being, you can supply a function delegate (Func<IPandoraContainer, T>) to be executed when the service should be instantiated. This would make a rather interesting extensibility story, since I’d avoid having to build in all kinds of hard to find hooks to allow modification of the object creation. </p>
+
+<p>Also, I’d like this delegate to be evaluated during runtime. This could enable me to resolve to another object if for example a network link is down etc.</p>
+
+<p>Another obvious use for this would be to access classes that are present in the .NET BCL but can’t be instantiated and would otherwise be supplied to the container through .Instance like the HttpContext:</p>
+
+
+{% highlight csharp %}
+store.Register(
+    p => p.Service<HttpContext>()
+        .Factory(s => { return HttpContext.Current; }));
+
+{% endhighlight %}
+
+<p></p>
+
+<p></p>
+
+<p>What do you think? Should this make it into Pandora? What do you want to see in a DI container? Please feel free to comment.</p>

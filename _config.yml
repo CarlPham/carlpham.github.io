@@ -1,5 +1,10 @@
-title: Architect theme
-description: Architect is a theme for GitHub Pages.
-show_downloads: true
-google_analytics:
-theme: 
+exclude: 
+- wordpress.xml
+- importer.rb
+- Rakefile
+- Thumbs.db
+- drafts
+- convert.rb
+- readme.textile
+permalink: /:year/:month/:day/:title
+pygments: false

@@ -1,0 +1,64 @@
+---
+layout: post
+title: "Keeping up with Castle binaries through NAnt"
+guid: http://www.tigraine.at/2009/07/25/keeping-up-with-castle-binaries-through-nant/
+postid: 671
+categories:
+- net
+- castle
+- programmierung
+---
+<p>One of the main annoyances of running from the castle trunk for me was copying new assemblies to my projects. Whenever I see something interesting pop up in the mailing list I usually run a SVN update to see what changed. While the castle build process is pretty simple at this point, picking the right assemblies and copying them to an ongoing project manually is just painful. </p>  <p>I did this exactly twice before I remembered the golden rule: <strong><u>automate</u></strong>!</p>  <p>This little NAnt target is now in charge of copying assemblies I need to my <a href="http://www.tigraine.at/2008/10/13/handling-dependencies/">project’s lib directory</a>:</p>  
+{% highlight xml %}
+<target name="castle-update">
+<if test="${property::exists('castle-trunk-dir')}">
+	
+	<if test="${property::exists('skip-castle-compile') == false}">
+		<echo message="Compiling castle trunk release binaries..." />
+		<exec program="build.cmd" basedir="${castle-trunk-dir}" workingdir="${castle-trunk-dir}">
+		</exec>
+	</if>
+	
+	<echo message="copying castle binaries" />
+	
+	<copy todir="lib\castle">
+		<fileset basedir="${castle-trunk-dir}\build\net-3.5\release\">
+			<include name="Castle.ActiveRecord.???" />
+			<include name="Castle.Components.Binder.???" />
+			<include name="Castle.Components.Common.EmailSender.???" />
+			<include name="Castle.Components.Common.TemplateEngine.???" />
+			<include name="Castle.Components.Common.TemplateEngine.NVelocityTemplateEngine.???" />
+			<include name="Castle.Components.DictionaryAdapter.???" />
+			<include name="Castle.Components.Pagination.???" />
+			<include name="Castle.Components.Validator.???" />
+			<include name="Castle.Core.???" />
+			<include name="Castle.DynamicProxy2.???" /> 
+			<include name="Castle.MonoRail.ActiveRecordSupport.???" />
+			<include name="Castle.MonoRail.Framework.???" />
+			<include name="Castle.MonoRail.Framework.Views.NVelocity.???" />
+			<include name="Castle.MonoRail.TestSupport.???" />
+			<include name="Castle.Services.Logging.Log4netIntegration.???" />
+			<include name="Iesi.Collections.???" />
+			<include name="log4net.???" />
+			<include name="*.license.txt" />
+			<include name="NHibernate.ByteCode.Castle.???" />
+			<include name="NHibernate.???" />
+			<include name="NVelocity.???" />
+		</fileset>
+	</copy>
+</if>
+<if test="${property::exists('castle-trunk-dir') == false}">
+	<fail message="Please specify the directory to castle-trunk through -D:castle-trunk-dir=<directory>" />
+</if>
+</target>
+
+
+{% endhighlight %}
+
+<p>This little script will compile castle and then copy over all files I need to my <tt>/lib/castle</tt> folder, making a castle update as easy as writing:</p>
+
+<blockquote><tt>
+    <p>build castle-update -D:castle-trunk-dir=..\open-source\castle-trunk</p>
+  </tt></blockquote>
+
+<p>Make sure you have your <tt>/lib/</tt> folder under source control in case some breaking changes come from the new castle binaries. </p>

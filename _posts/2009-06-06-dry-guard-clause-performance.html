@@ -1,0 +1,109 @@
+---
+layout: post
+title: "DRY Guard clause performance"
+guid: http://www.tigraine.at/?p=559
+postid: 559
+categories:
+- net
+- programmierung
+---
+<p><a href="http://bradwilson.typepad.com/">Brad Wilson</a> left me an inspiring comment on my <a href="http://www.tigraine.at/2009/06/06/good-ideas-worth-spreading-guards/">post about his Guard class</a> that I immediately tried out:</p>  <blockquote>   <p>If you target 3.5, you could write a guard which used expressions, and then you could evaluate the expression in order to fill things out. Unfortunately, the syntax ends up a little wonky, but at least you’re not repeating yourself:</p>    <p>Guard.ArgumentNotNull(() => username);</p>    <p>You could also do the same thing with complex expressions:</p>    <p>Guard.Precondition(() => username.Length > 10);</p>    <p>and when you throw the exception, it can even contain the actual condition code, extracted from the expression.</p> </blockquote>  <p>I went off to implement this using an Expression and ended up with the following ArgumentNotNull method:</p>  
+{% highlight csharp %}
+public static void ArgumentNotNull(Expression<Func<object>> action)
+{
+    var result = action.Compile()();
+    if (result == null)
+    {
+        //TODO: Extract memberinfo name from expression
+        throw new ArgumentException();
+    }
+}
+
+{% endhighlight %}
+
+<p>One thing to keep in mind is that guard clauses usually end up being in production code, and not in test code. So performance isn’t neglect able. Since action.Compile() clearly indicates that some compiling overhead happens to retrieve the value, I thought it might be interesting to benchmark it. Just in case it might still be neglect able.</p>
+
+<p>So, I wrote the following tester:</p>
+
+<p></p>
+
+
+{% highlight csharp %}
+using System;
+using System.Diagnostics;
+using System.Linq;
+
+public class Program
+{
+    private static int passes = 10000;
+
+    private static void Main(string[] args)
+    {
+        var runs = 5;
+        Console.WriteLine("{0} ms to run normal", AverageExecutionTime(RunSimple, runs));
+        Console.WriteLine("{0} ms to run with expression", AverageExecutionTime(RunExpressions, runs));
+        Console.ReadLine();
+    }
+
+    private static long AverageExecutionTime(Action delegateToWatch, int runs)
+    {
+        var lapTimes = new long[runs];
+        for (var i = 0; i < runs; i++)
+        {
+            lapTimes[i] = GetExecutiontime(delegateToWatch);
+        }
+        return lapTimes.Sum(p => p)/runs;
+    }
+
+    private static long GetExecutiontime(Action delegateToWatch)
+    {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        delegateToWatch();
+        stopwatch.Stop();
+        return stopwatch.ElapsedMilliseconds;
+    }
+
+    private static void RunSimple()
+    {
+        for (int i = 0; i < passes; i++)
+        {
+            string user = "test";
+            Guard.ArgumentNotNull("user", user);
+            GC.Collect();
+        }
+    }
+
+    private static void RunExpressions()
+    {
+        for (int i = 0; i < passes; i++)
+        {
+            string user = "test";
+            Guard.ArgumentNotNull(() => user);
+            GC.Collect();
+        }
+    }
+}
+
+{% endhighlight %}
+
+<p>As you can see, I rerun the test 4 times doing the NotNull test only 10000 times (always running the non-exceptional path), always forcing garbage collection between passes. </p>
+
+<p>The results were stunning:</p>
+
+<p><img style="border-right-width: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" title="image" border="0" alt="image" src="http://www.tigraine.at/wp-content/uploads/2009/06/image.png" width="484" height="131" /> </p>
+
+<p>I ran the test on my 2x3.16 Ghz Intel with 8gb Ram running Windows Vista x64 with no debugger attached and it turned out the expression tree compilation took almost 1 ms per pass. (Without garbage collection normal runs took 0 ms)</p>
+
+<p>Now one could argue, no sane person would place those guards inside some tight loop. But once you run into recursive method calls you may end up creating a performance bottleneck.</p>
+
+<p>Now, since I’m a lazy guy, I ended up writing a Resharper Live template that saves me the repetitive typing:</p>
+
+<p></p>
+
+
+{% highlight csharp %}
+Guard.ArgumentNotNull("$parametername$", $parametername$);
+$END$
+
+{% endhighlight %}
