@@ -1,0 +1,27 @@
+---
+layout:     post
+title:      "First day"
+subtitle:   "Learn and demo write blog use Jekyll"
+date:       2017-03-30 12:00:00
+author:     "Carl Pham"
+header-img: "img/post-bg-01.jpg"
+---
+
+<p>Nice. It worked.</p>
+
+<h2 class="section-heading">Section heading used h2 tag</h2>
+<p>This is nomarl text.</p>
+<p>Demo blockquote may be use for show code.</p>
+<blockquote>This is blockquote</blockquote>
+
+<h2 class="section-heading">Demo show image</h2>
+<a href="#">
+    <img src="{{ site.baseurl }}/img/post-sample-image.jpg" alt="Post Sample Image">
+</a>
+<span class="caption text-muted">This is caption</span>
+
+<h2 class="section-heading">Draft and some note when build blog</h2>
+<p>Cmd run jekyll on my virtualbox:</p>
+<blockquote>jekyll serve --host=10.0.2.15</blockquote>
+<p>Cmd run jekyll for update new post:</p>
+<pre>jekyll serve --host=10.0.2.15 --future</pre>
