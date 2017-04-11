@@ -13,7 +13,7 @@ email_username:  capham.vn@gmail.com
 
 # Google Analytics
 # To enable google analytics, uncomment below line with a valid Google Tracking ID
-google_tracking_id: 57650785
+google_tracking_id: UA-57650785-1
 
 # Build settings
 markdown: kramdown
