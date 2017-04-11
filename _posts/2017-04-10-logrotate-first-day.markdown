@@ -99,4 +99,34 @@ Ví dụ: log file được cấu hình rotate theo tuần (weekly) và theo dun
   <li><code>nomissingok</code>: ngược lại của missingok</li>
   <li><code>Notifempty</code>: không rotate nếu file log này trống</li>
 </ul>
+
+<h3>Rotate theo số lượng file log</h3>
+<pre>rotate [number]</pre>
+<p>Quy định số lượng log file cũ đã được giữ lại sau khi rotate. Ví dụ: <code>rotate7</code> giữ lại 7 file log cũ. Trường hợp đã có đủ 7 file log cũ thì file cũ nhất sẽ bị xóa đi để chứa file log mới được tạo.</p>
+
+<h3>Tự động nén Log file</h3>
+<p>Tùy chọn <code>Compress</code>: Logrotate sẽ nén tất cả các file log lại sau khi đã được rotate, mặc định bằng gzip.
+
+Nếu bạn muốn sử dụng chương trình nén khác như bzip2, xz hoặc zip thì hãy đặt tên chương trình đó thành biến sau giá trị cấu hình <code>Compresscmd xz</code>
+
+Tham số <code>Delaycompress</code> sẽ hữu dụng trong trường hợp bạn không muốn file log cũ phải nén ngay sau khi vừa được rotate. Thay vào đó, công việc nén sẽ được delay trễ hơn bằng việc sẽ nén file log cũ đó vào lần chạy rotate kế tiếp. Tùy chọn này chỉ hoạt động đi kèm chức năng compress trong file cấu hình, tức bạn phải cấu hình compress trước đó:
+<pre>
+compress
+delaycompress
+</pre>
+Tùy chọn <code>nocompress</code> không sử dụng tính năng nén đối với file log cũ</p>
+
+<h3>Phân quyền cho Log file</h3>
+<p>Chúng ta có thể chỉ định khi logrotate xử lý xong file log cũ sẽ tạo ra file log mới có tên tương ứng để thay thế file log hiện tại. Cấu hình tham số create sẽ quy định việc file log mới tạo ra. Bạn cần đảm bảo đúng phân quyền cho file log mới sau khi rotate.</p>
+<p>
+Note: Hoạt động tạo file này sẽ chạy trước script postrotate. Ví dụ:
+<pre>
+create 660 appuser www-data
+</pre>
+File log mới sẽ có owner là appuser và thuộc group www-data (group mà Apache thường chạy). Quyền hạn 660 cho phép cả owner và user trong cùng 1 nhóm được phép viết, sửa nội dung lên file. Điều này cho phép các ứng dụng PHP viết vào log file.
+
+Nếu bạn không muốn tự động tạo file log mới thì sử dụng option nocreate
+
+Tham số <code>Dateext</code> sẽ giúp cài đặt hậu tố của tên log file là thời gian theo cấu trúc yyyymmdd. Logs file mặc định có các giá trị hậu tố là các con số 1,2,3…
+</p>
 https://hocvps.com/logrotate/
